@@ -1,14 +1,21 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Author: Lesovsky A.V.
-# Physical drives auto-discovery. VERY VERY EXPERIMENTAL (TESTED ON MEGACLI 8.02.21 Oct 21, 2011)
+# Modified: Martin L.
+# Physical drives auto-discovery. VERY VERY EXPERIMENTAL (TESTED ON MEGACLI 4.00.11 February 06, 2009)
 
-adp_list=$(sudo megacli adpallinfo aALL nolog |grep "^Adapter #" |cut -d# -f2)
-enc_list=$(for a in $adp_list; do sudo megacli encinfo a$a nolog |grep -w "Device ID" |awk '{print $4}'; done)
+MEGACLI=/sbin/MegaCli
+
+if [[ $1 = raw ]]; then
+	adp_list=$2
+else
+	adp_list=$(sudo $MEGACLI -AdpAllInfo -aALL -NoLog |grep "^Adapter #" |cut -d# -f2)
+fi
+enc_list=$(for a in $adp_list; do sudo $MEGACLI -EncInfo -a$a -NoLog |grep -w "Device ID" |awk '{print $4}'; done)
 pd_list=$(for a in $adp_list; 
             do
               for e in $enc_list; 
                 do 
-                  sudo megacli pdlist a$a nolog |sed -n -e "/Enclosure Device ID: $e/,/Slot Number:/p" |grep -wE 'Slot Number:' |awk -v adp=$a -v enc=$e '{print adp":"enc":"$3}' 
+                  sudo $MEGACLI -PDList -a$a -NoLog |sed -n -e "/Enclosure Device ID: $e/,/Slot Number:/p" |grep -wE 'Slot Number:' |awk -v adp=$a -v enc=$e '{print adp":"enc":"$3}' 
                 done
             done)
 

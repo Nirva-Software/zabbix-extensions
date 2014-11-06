@@ -1,9 +1,16 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Author: Lesovsky A.V.
-# Logical drives auto-discovery via MegaCLI. VERY VERY EXPERIMENTAL (TESTED WITH 8.02.21 Oct 21, 2011)
+# Modified: Martin L.
+# Logical drives auto-discovery via MegaCLI. VERY VERY EXPERIMENTAL (TESTED ON MEGACLI 4.00.11 February 06, 2009)
 
-adp_list=$(sudo megacli adpallinfo aALL nolog |grep "^Adapter #" |cut -d# -f2)
-ld_list=$(for a in $adp_list; do sudo megacli ldinfo lall a$a nolog |grep -w "^Virtual Drive:" |awk '{print $3}' |while read ld ; do echo $a:$ld; done ; done)
+MEGACLI=/sbin/MegaCli
+
+if [[ $1 = raw ]]; then
+	adp_list=$2
+else
+	adp_list=$(sudo $MEGACLI -AdpAllInfo -aALL -NoLog |grep "^Adapter #" |cut -d# -f2)
+fi
+ld_list=$(for a in $adp_list; do sudo $MEGACLI -LDInfo -Lall -a$a -NoLog |grep -w "^Virtual Disk:" |awk '{print $3}' |while read ld ; do echo $a:$ld; done ; done)
 
 if [[ $1 = raw ]]; then
   for ld in ${ld_list}; do echo $ld; done ; exit 0
